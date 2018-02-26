@@ -1,0 +1,28 @@
+{
+  "name": "noorm-pg",
+  "version": "1.0.0",
+  "description": "Javascript regular object data binding, transacted blocks and multiple-database migrations for PostgreSQL, no ORM.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ushimado/noorm-pg.git"
+  },
+  "keywords": [
+    "postgres",
+    "migration",
+    "binding",
+    "data"
+  ],
+  "author": "Cow Man",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ushimado/noorm-pg/issues"
+  },
+  "homepage": "https://github.com/ushimado/noorm-pg#readme",
+  "dependencies": {
+    "pg": "^7.4.1"
+  }
+}
