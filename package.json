@@ -1,10 +1,11 @@
 {
   "name": "noorm-pg",
-  "version": "1.0.0",
+  "version": "0.5.0",
   "description": "Javascript regular object data binding, transacted blocks and multiple-database migrations for PostgreSQL, no ORM.",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "scripts": {},
+  "bin": {
+    "migdb": "./src/scripts/migrate.js"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,7 @@
   },
   "homepage": "https://github.com/ushimado/noorm-pg#readme",
   "dependencies": {
+    "glob": "^7.1.2",
     "pg": "^7.4.1"
   }
 }
