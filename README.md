@@ -84,10 +84,10 @@ migdb db:migration:create [name]
 This will add a .js migration script file to the migrator group indicated by `name` which will have the following structure:
 ```
 module.exports = {
-  upgrade: (conn) => {
+  upgrade: async (conn) => {
     // Migration code goes in here
   },
-  downgrade: (conn) => {
+  downgrade: async (conn) => {
     // De-migration code goes in here
   },
   transactUpgrade: true,
