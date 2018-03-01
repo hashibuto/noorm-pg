@@ -17,7 +17,7 @@ npm install --global noorm-pg
 ## Migrations
 The migrator supports migration groups, each of which can reference multiple nodes (databases following the same schema).  This is useful in scenarios where a given database is being scaled horizontally to multiple nodes.  The basic usage is as follows:
 
-####Initialization
+###Initialization
 From the target package root (where name is the name of the first migration group you'd like to create):
 ```bash
 migdb db:init [name]
