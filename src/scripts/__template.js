@@ -1,8 +1,8 @@
 module.exports = {
-  upgrade: (conn) => {
+  upgrade: async (conn) => {
     // Migration code goes in here
   },
-  downgrade: (conn) => {
+  downgrade: async (conn) => {
     // De-migration code goes in here
   },
   transactUpgrade: true,
