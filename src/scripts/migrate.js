@@ -368,7 +368,7 @@ async function downgradeSchema(migGroupDir, connUri, version) {
  *
  * @param {string} [name=null] Migrator group name.
  */
-function doMigration(name=null) {
+async function doMigration(name=null) {
   const config = verifyEnvironment();
   if (config === null)
     return;
