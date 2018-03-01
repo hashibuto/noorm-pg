@@ -180,7 +180,7 @@ function createMigrator(name) {
 async function upgradeSchema(migGroupDir, connUri) {
   const conn = new Connection(connUri);
   try {
-    if (!metaTableExists(conn)) {
+    if (!(await metaTableExists(conn))) {
       // Add the table
       console.log("Creating migrator metadata table");
       await conn.transact(t => {
@@ -280,17 +280,7 @@ async function downgradeSchema(migGroupDir, connUri, version) {
   const conn = new Connection(connUri);
   try {
     // Make sure the table exists
-    const result = await conn.query(`
-      SELECT EXISTS (
-        SELECT 1
-        FROM pg_catalog.pg_class
-        WHERE
-          relname = '${TABLE_NAME}' AND
-          relkind = 'r'
-      ) AS exists
-    `);
-
-    if (result.rows[0].exists === false) {
+    if (!(await metaTableExists(conn))) {
       console.log("Migrator table not initialized, backing out.");
       return;
     }
