@@ -391,7 +391,7 @@ async function doMigration(name=null) {
  * @param {string} name
  * @param {string} version
  */
-function doRollback(name, version) {
+async function doRollback(name, version) {
   const config = verifyEnvironment();
   if (config === null)
     return;
