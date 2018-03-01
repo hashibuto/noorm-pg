@@ -373,15 +373,15 @@ async function doMigration(name=null) {
   if (config === null)
     return;
 
-  config.groups.forEach(async group => {
+  for (let group of config.groups) {
     if (group.name === name || name === null) {
       const groupDir = path.join('.', 'migrators', group.name);
-      group.nodes.forEach(node => {
+      for (let node of group.nodes)
         console.log(`Checking ${group.name}, node: ${node.alias}`);
         await upgradeSchema(groupDir, processConnURI(node.connUri));
-      });
+      }
     }
-  });
+  }
 }
 /**
  * Rolls back database group (by name) to specified version.  Single rollbacks were
@@ -396,15 +396,15 @@ function doRollback(name, version) {
   if (config === null)
     return;
 
-  config.groups.forEach(async group => {
+  for (let group of config.groups) {
     if (group.name === name || name === null) {
       const groupDir = path.join('.', 'migrators', group.name);
-      group.nodes.forEach(node => {
+      for (let node of group.nodes) {
         console.log(`Checking ${group.name}, node: ${node.alias}`)
         await downgradeSchema(groupDir, processConnURI(node.connUri), version);
-      });
+      }
     }
-  });
+  }
 }
 
 /**
