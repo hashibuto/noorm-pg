@@ -376,7 +376,7 @@ async function doMigration(name=null) {
   for (let group of config.groups) {
     if (group.name === name || name === null) {
       const groupDir = path.join('.', 'migrators', group.name);
-      for (let node of group.nodes)
+      for (let node of group.nodes) {
         console.log(`Checking ${group.name}, node: ${node.alias}`);
         await upgradeSchema(groupDir, processConnURI(node.connUri));
       }
