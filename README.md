@@ -17,12 +17,13 @@ npm install --global noorm-pg
 ## Migrations
 The migrator supports migration groups, each of which can reference multiple nodes (databases following the same schema).  This is useful in scenarios where a given database is being scaled horizontally to multiple nodes.  The basic usage is as follows:
 
-###Initialization
+####Initialization
+
 From the target package root (where name is the name of the first migration group you'd like to create):
 ```bash
 migdb db:init [name]
 ```
-This will build the basic directory structure and initialize a `migrations/config.json` in the package root.  Each invocation of this command will create a new migration group.  
+This will build the basic directory structure and initialize a `migrations/config.json` in the package root.  Each invocation of this command will create a new migration group.
 
 A basic, single database structure with multiple nodes would look like this:
 
@@ -53,7 +54,7 @@ A basic, single database structure with multiple nodes would look like this:
           {
             "alias": "customer_db_2",
             "connUri": "postgresql://username:password@node2.production/customer_db"
-          },   
+          },
           {
             "alias": "customer_db_3",
             "connUri": "postgresql://username:password@node3.production/customer_db"
@@ -76,6 +77,7 @@ This will be evaluated as a variable by the `migdb` script instead of a string l
 
 It is important to note that `migdb` will look at `process.env.NODE_ENV` when determining which branch (production, development, etc.) to access when running migrations.  If `process.env.NODE_ENV` is not undefined, `migdb` will default to `development`.
 #### Creating a migration script
+
 ```bash
 migdb db:migration:create [name]
 ```
@@ -97,12 +99,14 @@ The connection object will be discussed below.  There is an upgrade function, a 
 **NOTE:** `migdb` will attempt to transact the entire migration/rollback process.  It is sometimes however necessary to execute some SQL without a transaction.  In this event, the transaction will be committed, the untransacted migrator will run, then a new transaction will begin for any further pending migration scripts.  It is highly recommended that any untransacted statements are executed in isolation within their own migrator script to avoid issues in the event of any failure to execute all statements within the migrator.
 
 ####Running migrator(s)
+
 ```bash
 migdb db:migrate [name]
 ```
 Executes pending migrations in one or more migrator groups. `name` is an optional argument to limit the scope of the migration to that single migrator group.  If `name` is not provided, all pending migrations on all migrator groups will be executed.  At this time, migrations are executed synchronously.  As mentioned above, all pending transacted migrators will run prior to committing the transaction, thus if any failure, all will be rolled back.
 
 ####Rolling back migrations
+
 ```bash
 migdb db:migrate:undo [name] [version]
 ```
@@ -111,6 +115,7 @@ Executes a rollback up to (but not including) migrator `version`, which is the f
 ## Connection object
 
 ####Initialization and teardown
+
 ```js
 const conn = new Connection('postgresql://localhost/mydb');
 conn.release();
@@ -118,6 +123,7 @@ conn.release();
 The `Connection` object utilizes a connection pool, provided by the underlying `node-pg` module.  The `release` method releases the connection pool back to the database.  See the PostgreSQL documentation on [connection strings](https://www.postgresql.org/docs/9.4/static/libpq-connect.html#LIBPQ-CONNSTRING) for detailed examples of a connection URI.
 
 ####Querying
+
 ```js
 const results = await conn.query("SELECT field FROM table WHERE x = 1");
 results.rows.forEach(row => {
@@ -127,10 +133,11 @@ results.rows.forEach(row => {
 `query` is an async function so it can be used with the `await` keyword to control flow.
 
 ####Data binding
+
 ```js
 const results = await conn.query(`
 	SELECT first_name, last_name FROM table
-	WHERE 
+	WHERE
 		age > :age AND
 		title = :jobTitle
 `,
@@ -142,6 +149,7 @@ const results = await conn.query(`
 Bound data takes the form of a regular javascript object.  Single binding object per query.
 
 ####Transaction blocks
+
 ```js
 await conn.transact(async t => {
 	await t.query(
