@@ -378,7 +378,7 @@ function doMigration(name=null) {
       const groupDir = path.join('.', 'migrators', group.name);
       group.nodes.forEach(node => {
         console.log(`Checking ${group.name}, node: ${node.alias}`);
-        upgradeSchema(groupDir, processConnURI(node.connUri));
+        await upgradeSchema(groupDir, processConnURI(node.connUri));
       });
     }
   });
@@ -401,7 +401,7 @@ function doRollback(name, version) {
       const groupDir = path.join('.', 'migrators', group.name);
       group.nodes.forEach(node => {
         console.log(`Checking ${group.name}, node: ${node.alias}`)
-        downgradeSchema(groupDir, processConnURI(node.connUri), version);
+        await downgradeSchema(groupDir, processConnURI(node.connUri), version);
       });
     }
   });
