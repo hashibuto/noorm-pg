@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 
+process.env.DB = 'postgresql://postgres@localhost:5432/test';
+
 const path = require('path');
 const fs = require('fs');
 const Connection = require('../Connection');
 const glob = require('glob');
+
+const CONN_URI_EVAL_MATCHER = /^({)(.*)(})$/;
 
 const COMMANDS = new Set([
   "db:init",
@@ -112,6 +116,38 @@ function dbInit(name) {
   console.log(`Migrator group "${name}" initialized.`)
   console.log(`Add connection URIs to:\n  ${configFile}`)
 }
+/**
+ * Queries for the existance of the metadata table and returns a bool
+ * indicating whether or not it exists.
+ *
+ * @param {Connection} conn Connection object.
+ * @returns Bool indicating if table exists.
+ */
+async function metaTableExists(conn) {
+  const result = await conn.query(`
+    SELECT EXISTS (
+      SELECT 1
+      FROM pg_catalog.pg_class
+      WHERE
+        relname = '${TABLE_NAME}' AND
+        relkind = 'r'
+    ) AS exists
+  `);
+  return result.rows[0].exists;
+}
+
+/**
+ * Processes a connection URI, determines if
+ *
+ * @param {any} connUri
+ */
+function processConnURI(connUri) {
+  const match = connUri.match(CONN_URI_EVAL_MATCHER);
+  if (match === null)
+    return connUri;
+
+  return eval(match[2]);
+}
 
 /**
  * Creates migrator in migration group.
@@ -144,18 +180,7 @@ function createMigrator(name) {
 async function upgradeSchema(migGroupDir, connUri) {
   const conn = new Connection(connUri);
   try {
-    // Make sure the table exists
-    const result = await conn.query(`
-      SELECT EXISTS (
-        SELECT 1
-        FROM pg_catalog.pg_class
-        WHERE
-          relname = '${TABLE_NAME}' AND
-          relkind = 'r'
-      ) AS exists
-    `);
-
-    if (result.rows[0].exists === false) {
+    if (!metaTableExists(conn)) {
       // Add the table
       console.log("Creating migrator metadata table");
       await conn.transact(t => {
@@ -362,8 +387,8 @@ function doMigration(name=null) {
     if (group.name === name || name === null) {
       const groupDir = path.join('.', 'migrators', group.name);
       group.nodes.forEach(node => {
-        console.log(`Checking ${group.name}, node: ${node.alias}`)
-        upgradeSchema(groupDir, node.connUri);
+        console.log(`Checking ${group.name}, node: ${node.alias}`);
+        upgradeSchema(groupDir, processConnURI(node.connUri));
       });
     }
   });
@@ -386,7 +411,7 @@ function doRollback(name, version) {
       const groupDir = path.join('.', 'migrators', group.name);
       group.nodes.forEach(node => {
         console.log(`Checking ${group.name}, node: ${node.alias}`)
-        downgradeSchema(groupDir, node.connUri, version);
+        downgradeSchema(groupDir, processConnURI(node.connUri), version);
       });
     }
   });
