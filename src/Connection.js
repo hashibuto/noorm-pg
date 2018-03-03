@@ -12,6 +12,8 @@ const BINDING_FINDER = /(?<=^(([^']*(?<!\\)'[^']*(?<!\\)'[^']*)*|[^']*))((?<!:):
 class Connection {
 
   constructor(connType, logging=false) {
+    this.logging = logging;
+
     if (typeof connType === "string") {
       const pool = new Pool({
         connectionString: connType
@@ -21,8 +23,6 @@ class Connection {
     } else {
       this.__conn = connType;
     }
-
-    this.logging = logging;
   }
 
   /**
