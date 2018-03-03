@@ -148,7 +148,7 @@ const results = await conn.query(`
 ```
 Bound data takes the form of a regular javascript object.  Single binding object per query.
 
-####Transaction blocks
+####Transacted callback
 
 ```js
 await conn.transact(async t => {
@@ -166,5 +166,24 @@ await conn.transact(async t => {
 });
 ```
 Transaction block accept a callback function which receives a `Connection` object as the argument.  The underlying connection is a single connection from the pool of the `Connection` object which initiated the transaction.
+
+####Transactions (alternative)
+```js
+const t = await conn.begin();
+try {
+	await t.query(
+		"INSERT INTO table (x, y, z) VALUES (:one, :two, :three)",
+		{
+			one: 33,
+			two: 66,
+			three: 'abc'
+		}
+	);
+	await t.commit();
+} catch(e) {
+	await t.rollback();
+	throw e;
+}
+```
 
 That's all folks.
