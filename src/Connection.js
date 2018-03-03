@@ -56,6 +56,40 @@ class Connection {
   }
 
   /**
+   * Initiates a transaction and returns a Connection object
+   * which wraps the transacted connection.
+   *
+   * @returns Connection
+   * @memberof Connection
+   */
+  async begin() {
+    const client = await this.__conn.connect();
+    const conn = new Connection(client, this.logging);
+    conn.query("BEGIN");
+    return conn;
+  }
+
+  /**
+   * Commits transaction on transacted Connection object.
+   *
+   * @memberof Connection
+   */
+  async commit() {
+    await this.__conn.query("COMMIT");
+    this.__conn.release();
+  }
+
+  /**
+   * Rolls back transaction on transacted Connection object.
+   *
+   * @memberof Connection
+   */
+  async rollback() {
+    await this.__conn.query("ROLLBACK");
+    this.__conn.release();
+  }
+
+  /**
    * Executes a single query against the database.  Binding parameters can be supplied
    * as a regular javascript object (kv pairs).
    *
