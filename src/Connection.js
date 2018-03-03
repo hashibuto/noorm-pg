@@ -65,7 +65,7 @@ class Connection {
   async begin() {
     const client = await this.__conn.connect();
     const conn = new Connection(client, this.logging);
-    conn.query("BEGIN");
+    await conn.query("BEGIN");
     return conn;
   }
 
