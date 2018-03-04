@@ -179,6 +179,10 @@ function createMigrator(name) {
  */
 async function upgradeSchema(migGroupDir, connUri) {
   const conn = new Connection(connUri);
+  if (conn.__conn === undefined) {
+    console.log("Error establishing connection to database");
+    process.exit(1);
+  }
   try {
     if (!(await metaTableExists(conn))) {
       // Add the table
@@ -278,6 +282,10 @@ async function upgradeSchema(migGroupDir, connUri) {
  */
 async function downgradeSchema(migGroupDir, connUri, version) {
   const conn = new Connection(connUri);
+  if (conn.__conn === undefined) {
+    console.log("Error establishing connection to database");
+    process.exit(1);
+  }
   try {
     // Make sure the table exists
     if (!(await metaTableExists(conn))) {
