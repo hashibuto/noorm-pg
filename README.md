@@ -117,6 +117,8 @@ Executes a rollback up to (but not including) migrator `version`, which is the f
 ####Initialization and teardown
 
 ```js
+const { Connection } = require('noorm-pg');
+
 const conn = new Connection('postgresql://localhost/mydb');
 conn.release();
 ```
