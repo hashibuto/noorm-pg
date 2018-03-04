@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 
-process.env.DB = 'postgresql://postgres@localhost:5432/test';
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+  console.log("Development mode")
+} else {
+  console.log("Production mode")
+}
 
 const path = require('path');
 const fs = require('fs');
@@ -444,7 +449,7 @@ function processArgs() {
       }
       case "db:migrate": {
         let name = null;
-        if (argv.length !== 4) {
+        if (argv.length === 4) {
           name = argv[3];
         }
         doMigration(name);
