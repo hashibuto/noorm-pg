@@ -192,8 +192,8 @@ async function upgradeSchema(migGroupDir, connUri) {
     if (!(await metaTableExists(conn))) {
       // Add the table
       console.log("Creating migrator metadata table");
-      await conn.transact(t => {
-        t.query(`
+      await conn.transact(async t => {
+        await t.query(`
           CREATE TABLE ${TABLE_NAME} (
             version TEXT PRIMARY KEY
           )
