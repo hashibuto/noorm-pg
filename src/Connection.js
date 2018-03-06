@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
 
 // Regular expression which matches on non-quoted binding paremeter markers
-const BINDING_FINDER = /(?<=^(([^']*(?<!\\)'[^']*(?<!\\)'[^']*)*|[^']*))((?<!:):[^:\s;,]+)/g;
+const BINDING_FINDER = /(?<=^(([^']*(?<!\\)'[^']*(?<!\\)'[^']*)*|[^']*))((?<!:):[a-zA-Z0-9_]+)/g;
 
 /**
  * Wraps the node-postgres to allow a few things such as transaction blocks and

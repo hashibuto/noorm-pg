@@ -10,9 +10,8 @@ if (process.env.NODE_ENV !== 'production') {
 const path = require('path');
 const fs = require('fs');
 const Connection = require('../Connection');
+const Config = require('../Config');
 const glob = require('glob');
-
-const CONN_URI_EVAL_MATCHER = /^({)(.*)(})$/;
 
 const COMMANDS = new Set([
   "db:init",
@@ -139,19 +138,6 @@ async function metaTableExists(conn) {
     ) AS exists
   `);
   return result.rows[0].exists;
-}
-
-/**
- * Processes a connection URI, determines if
- *
- * @param {any} connUri
- */
-function processConnURI(connUri) {
-  const match = connUri.match(CONN_URI_EVAL_MATCHER);
-  if (match === null)
-    return connUri;
-
-  return eval(match[2]);
 }
 
 /**
@@ -391,7 +377,7 @@ async function doMigration(name=null) {
       const groupDir = path.join('.', 'migrators', group.name);
       for (let node of group.nodes) {
         console.log(`Checking ${group.name}, node: ${node.alias}`);
-        await upgradeSchema(groupDir, processConnURI(node.connUri));
+        await upgradeSchema(groupDir, Config.processConnURI(node.connUri));
       }
     }
   }
