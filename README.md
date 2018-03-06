@@ -112,6 +112,25 @@ migdb db:migrate:undo [name] [version]
 ```
 Executes a rollback up to (but not including) migrator `version`, which is the full file name of the migrator file, including the `.js` extension.  Implicitly, this means that the very first migrator cannot be rolled back.  The philosophy here is that one could simply drop and recreate the database in this event, as opposed to executing the rollback.  There is no notion of rolling back a single migration (without naming) since in a node cluster scenario, it's impossible to guarantee that all nodes are on the same migration, thus providing the name is necessary.
 
+####Accessing the config.json
+It is convenient to be able to access the configurations defined within config.json within your application.  In order to make this easier, there is the `Config.js` module.
+
+```js
+const path = require('path');
+const { Config } = require('noorm-pg');
+
+// Static synchronous initialization
+Config.initialize(path.join(__dirname, '..', 'migrators', 'config.json'));
+
+// Access your configuration like this
+const nodes = Config.getMigratorGroupNodes('my_migrator');
+nodes.forEach(node => {
+	console.log(node.alias);
+	console.log(node.connUri);
+});
+```
+The `Config` module is aware of variables used in your `config.js` file for connUri and will eval them for you.
+
 ## Connection object
 
 ####Initialization and teardown

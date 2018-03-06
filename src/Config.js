@@ -30,7 +30,7 @@ class Config {
       if (group.name === groupName) {
         return group.nodes.map(node => {
           return {
-            ...node
+            ...node,
             connUri: Config.processConnURI(node.connUri)
           };
         });
