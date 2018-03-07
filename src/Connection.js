@@ -99,32 +99,39 @@ class Connection {
    * @memberof Connection
    */
   async query(queryString, bindings=null) {
-    let promise = null;
-    if (bindings !== null) {
-      const matches = queryString.match(BINDING_FINDER);
-      const data = matches.map(value => {
-        const attrName = value.slice(1, value.length);
-        return bindings[attrName];
-      });
-      let i = 0;
-      const bindQuery = queryString.replace(BINDING_FINDER, () => {
-        return `$${++i}`;
-      });
+    try {
+      let promise = null;
+      if (bindings !== null) {
+        const matches = queryString.match(BINDING_FINDER);
+        const data = matches.map(value => {
+          const attrName = value.slice(1, value.length);
+          return bindings[attrName];
+        });
+        let i = 0;
+        const bindQuery = queryString.replace(BINDING_FINDER, () => {
+          return `$${++i}`;
+        });
 
-      if (this.logging === true) {
-        console.log(`Query:\n${bindQuery}\nBindings:\n${data}`);
+        if (this.logging === true) {
+          console.log(`Query:\n${bindQuery}\nBindings:\n${data}`);
+        }
+
+        promise = this.__conn.query(bindQuery, data);
+      } else {
+        if (this.logging === true) {
+          console.log(`Query:\n${queryString}`);
+        }
+        promise = this.__conn.query(queryString);
       }
 
-      promise = this.__conn.query(bindQuery, data);
-    } else {
-      if (this.logging === true) {
-        console.log(`Query:\n${queryString}`);
-      }
-      promise = this.__conn.query(queryString);
+      return promise;
+    } catch(e) {
+      console.log(`Query:\n${queryString}`);
+      console.log(`Bindings:\n${bindings}`);
+      throw e;
     }
-
-    return promise;
   }
+
 };
 
 module.exports = Connection;
