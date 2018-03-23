@@ -1,4 +1,9 @@
 const { Pool } = require('pg');
+const types = require('pg').types
+
+types.setTypeParser(20, function(val) {
+  return parseInt(val)
+})
 
 // Regular expression which matches on non-quoted binding paremeter markers
 const BINDING_FINDER = /(?<=^(([^']*(?<!\\)'[^']*(?<!\\)'[^']*)*|[^']*))((?<!:):[a-zA-Z0-9_]+)/g;
