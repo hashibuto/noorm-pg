@@ -400,7 +400,7 @@ async function doRollback(name, version) {
       const groupDir = path.join('.', 'migrators', group.name);
       for (let node of group.nodes) {
         console.log(`Checking ${group.name}, node: ${node.alias}`)
-        await downgradeSchema(groupDir, processConnURI(node.connUri), version);
+        await downgradeSchema(groupDir, Config.processConnURI(node.connUri), version);
       }
     }
   }
