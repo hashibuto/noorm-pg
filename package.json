@@ -1,6 +1,6 @@
 {
   "name": "noorm-pg",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "Javascript regular object data binding, transacted blocks and multiple-database migrations for PostgreSQL, no ORM.",
   "main": "./src/index.js",
   "scripts": {},

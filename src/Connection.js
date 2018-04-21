@@ -137,6 +137,23 @@ class Connection {
     }
   }
 
+  /*
+   * Executes a query directly against the underlying pg connection object.
+   * Does not perform any manipulation of binding parameters.
+   *
+   * @param {String} queryString SQL query string
+   * @param {Array} Array of binding values, each will be assigned in order to
+   *   markers in the queryString represented by $1, $2 etc. tokens
+   */
+  async rawQuery(queryString, bindings) {
+    try {
+      return this.__conn.query(queryString, bindings);
+    } catch(e) {
+      console.log(`Query:\n${queryString}`);
+      console.log(`Bindings:\n${bindings}`);
+      throw e;
+    }
+  }
 };
 
 module.exports = Connection;
