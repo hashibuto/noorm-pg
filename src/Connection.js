@@ -147,6 +147,10 @@ class Connection {
    */
   async rawQuery(queryString, bindings) {
     try {
+      if (this.logging === true) {
+        console.log(`Query:\n${queryString}\nBindings:\n${bindings}`);
+      }
+
       return this.__conn.query(queryString, bindings);
     } catch(e) {
       console.log(`Query:\n${queryString}`);
