@@ -226,6 +226,7 @@ async function getConn(connUri, waitTime) {
  * @param {int} [waitTime=0] Number of seconds to wait in event of the database not being ready
  */
 async function upgradeSchema(migGroupDir, connUri, waitTime) {
+  console.log("Running in upgrade mode");
   const conn = await getConn(connUri, waitTime);
   if (conn === null) {
     console.log("Error establishing connection to database");
@@ -330,6 +331,7 @@ async function upgradeSchema(migGroupDir, connUri, waitTime) {
  * @returns
  */
 async function downgradeSchema(migGroupDir, connUri, version) {
+  console.log("Running in downgrade mode");
   const conn = new Connection(connUri);
   if (conn.__conn === undefined) {
     console.log("Error establishing connection to database");
