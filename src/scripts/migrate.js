@@ -162,18 +162,76 @@ function createMigrator(name) {
   fs.writeFileSync(migratorFile, templateData);
   console.log(`Created:\n  ${migratorFile}`);
 }
+
+/*
+ * @param {string} connUri PostgreSQL connection URI.
+ * @param {int} [waitTime=0] Number of seconds to wait in event of the database not being ready
+ */
+async function getConn(connUri, waitTime) {
+  const startTime = new Date();
+
+  let c = null;
+  let totalSec = 0;
+
+  while (c === null) {
+    c = await new Promise(async (resolve, reject) => {
+      let conn;
+      try {
+        conn = new Connection(connUri);
+
+        if (conn.__conn !== undefined) {
+          // Perform a basic query against the database to ensure connectivity
+          const result = await conn.query("SELECT 1");
+          resolve(conn);
+        } else {
+          const t = new Date();
+          totalSec = (t.getTime() - startTime.getTime()) / 1000;
+          if (totalSec + 1 > waitTime) {
+            resolve(null)
+          } else {
+            setTimeout(() => {
+              console.log("Waiting for connection to become available")
+              resolve(null)
+            }, 1000)
+          }
+        }
+
+      } catch(e) {
+        setTimeout(() => {
+          console.log("Waiting for connection to become available")
+          reject(e)
+        }, 1000)
+      }
+    })
+    .catch(e => {
+      // Blanket catch here, we know there's a connection issue
+      return null;
+    })
+
+    const t = new Date();
+    totalSec = (t.getTime() - startTime.getTime()) / 1000;
+    if (totalSec > waitTime)
+      break;
+  }
+
+  return c;
+}
+
+
 /**
  * Upgrades the schema.
  *
  * @param {string} migGroupDir Migrator group directory.
  * @param {string} connUri PostgreSQL connection URI.
+ * @param {int} [waitTime=0] Number of seconds to wait in event of the database not being ready
  */
-async function upgradeSchema(migGroupDir, connUri) {
-  const conn = new Connection(connUri);
-  if (conn.__conn === undefined) {
+async function upgradeSchema(migGroupDir, connUri, waitTime) {
+  const conn = await getConn(connUri, waitTime);
+  if (conn === null) {
     console.log("Error establishing connection to database");
     process.exit(1);
   }
+
   try {
     if (!(await metaTableExists(conn))) {
       // Add the table
@@ -366,8 +424,9 @@ async function downgradeSchema(migGroupDir, connUri, version) {
  * Executes migration script in all groups unless group name is provided.
  *
  * @param {string} [name=null] Migrator group name.
+ * @param {int} [waitTime=0] Number of seconds to wait in event of the database not being ready
  */
-async function doMigration(name=null) {
+async function doMigration(name=null, waitTime=0) {
   const config = verifyEnvironment();
   if (config === null)
     return;
@@ -377,7 +436,7 @@ async function doMigration(name=null) {
       const groupDir = path.join('.', 'migrators', group.name);
       for (let node of group.nodes) {
         console.log(`Checking ${group.name}, node: ${node.alias}`);
-        await upgradeSchema(groupDir, Config.processConnURI(node.connUri));
+        await upgradeSchema(groupDir, Config.processConnURI(node.connUri), waitTime);
       }
     }
   }
@@ -435,10 +494,29 @@ function processArgs() {
       }
       case "db:migrate": {
         let name = null;
-        if (argv.length === 4) {
-          name = argv[3];
+        let waitTime = 0;
+        if (argv.length >= 4) {
+          if (!argv[3].startsWith('--'))
+            name = argv[3];
         }
-        doMigration(name);
+
+        let parseError = false;
+        argv.forEach((arg, index) => {
+          if (arg === '--wait') {
+            if (argv.length <= index + 1) {
+              parseError = true;
+              console.log("Must specify number of seconds to wait");
+            } else {
+              waitTime = parseInt(argv[index+1]);
+              if (isNaN(waitTime) || waitTime <= 0) {
+                parseError = true;
+                console.log("Wait time must be a positive integer");
+              }
+            }
+          }
+        })
+        if (!parseError)
+          doMigration(name, waitTime);
         break;
       }
       case "db:migrate:undo": {
@@ -462,7 +540,8 @@ function processArgs() {
     console.log("");
     console.log("  db:init [name]                     Creates a named migrator group");
     console.log("  db:migration:create [name]         Creates a new migrator for the named migrator group");
-    console.log("  db:migrate [name]                  Runs all migrators (optional database name)");
+    console.log("  db:migrate [name] [--wait n]       Runs all migrators (optional database name)");
+    console.log("                                     (--wait will wait up to n seconds for the database to become available)");
     console.log("  db:migrate:undo [name] [version]   Rolls back migrator to specific version");
   }
 }
