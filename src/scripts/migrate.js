@@ -1,11 +1,6 @@
 #!/usr/bin/env node
-
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-  console.log("Development mode")
-} else {
-  console.log("Production mode")
-}
+const Env = require('../Env');
+Env.terraform();
 
 const path = require('path');
 const fs = require('fs');
