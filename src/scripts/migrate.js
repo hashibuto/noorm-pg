@@ -1,6 +1,23 @@
 #!/usr/bin/env node
+let envPath = null;
+const newArgs = [];
+const removeInds = new Set();
+process.argv.forEach((arg, index) => {
+  if (arg === '--envdir') {
+    envPath = process.argv[index + 1];
+
+    removeInds.add(index);
+    removeInds.add(index + 1);
+  } else {
+    if (!removeInds.has(index)) {
+      newArgs.push(arg);
+    }
+  }
+});
+process.argv = newArgs;
+
 const Env = require('../Env');
-Env.terraform();
+Env.terraform(envPath);
 
 const path = require('path');
 const fs = require('fs');
@@ -532,6 +549,10 @@ function processArgs() {
     console.log("");
     console.log("Usage:");
     console.log("migrate [command] [options]");
+    console.log("");
+    console.log("Global options:");
+    console.log("");
+    console.log("  --envdir                           Specifies a directory where .env.json files can be found");
     console.log("");
     console.log("Valid commands:");
     console.log("");
