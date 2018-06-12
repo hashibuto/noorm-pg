@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 let envPath = null;
+let processName = "migdb";
 const newArgs = [];
 const removeInds = new Set();
 process.argv.forEach((arg, index) => {
   if (arg === '--envdir') {
     envPath = process.argv[index + 1];
+
+    removeInds.add(index);
+    removeInds.add(index + 1);
+  } else if (arg === '--processname') {
+    processName = process.argv[index + 1];
 
     removeInds.add(index);
     removeInds.add(index + 1);
@@ -17,7 +23,7 @@ process.argv.forEach((arg, index) => {
 process.argv = newArgs;
 
 const Env = require('../Env');
-Env.terraform(envPath);
+Env.terraform(envPath, processName);
 
 const path = require('path');
 const fs = require('fs');
@@ -554,6 +560,7 @@ function processArgs() {
     console.log("");
     console.log("Global options:");
     console.log("");
+    console.log("  --processname                      Specifies the process name for pickup up the appropriate env configuration");
     console.log("  --envdir                           Specifies a directory where .env.json files can be found");
     console.log("");
     console.log("Valid commands:");
