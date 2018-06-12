@@ -202,7 +202,8 @@ async function getConn(connUri, waitTime) {
             resolve(null)
           } else {
             setTimeout(() => {
-              console.log("Waiting for connection to become available")
+              console.log("Waiting for connection to become available");
+              console.log(connUri)
               resolve(null)
             }, 1000)
           }
@@ -211,6 +212,7 @@ async function getConn(connUri, waitTime) {
       } catch(e) {
         setTimeout(() => {
           console.log("Waiting for connection to become available")
+          console.log(connUri)
           reject(e)
         }, 1000)
       }
