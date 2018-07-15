@@ -7,7 +7,7 @@ types.setTypeParser(20, function(val) {
 
 // Regular expression which matches on binding parameter markers
 // Had to remove in-quote detection because it was crashing the js engine
-const BINDING_FINDER = /(:[a-zA-Z0-9_]+)/g;
+const BINDING_FINDER = /((?<!:):[a-zA-Z0-9_]+)/g;
 
 /**
  * Wraps the node-postgres to allow a few things such as transaction blocks and
