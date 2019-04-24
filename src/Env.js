@@ -3,7 +3,7 @@ const fs = require('fs');
 const dotenv = require('dotenv');
 
 class Env {
-  static terraform(envPath=null, processName="migdb") {
+  static terraform(envPath=null) {
     if (envPath === null) {
       let env;
       const dotEnvFile = path.join(process.cwd(), '.env');
@@ -46,7 +46,6 @@ class Env {
       console.log("Using .env.json style configs")
 
       let env, envData;
-      const headings = ["__GLOBAL", processName];
       const BASE = ".env.json";
       const DOCKER = ".env.docker.json";
       const PROD = ".env.prod.json"
@@ -65,14 +64,9 @@ class Env {
         if (fs.existsSync(file)) {
           console.log("Found");
           envData = JSON.parse(fs.readFileSync(file));
-          headings.forEach(heading => {
-            if (heading in envData) {
-              env = envData[heading];
-              for (let key in env) {
-                process.env[key] = env[key];
-              }
-            }
-          })
+          for (let key in envData) {
+            process.env[key] = envData[key];
+          }
         }
       });
     }
