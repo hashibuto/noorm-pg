@@ -1,16 +1,10 @@
 #!/usr/bin/env node
 let envPath = null;
-let processName = "migdb";
 const newArgs = [];
 const removeInds = new Set();
 process.argv.forEach((arg, index) => {
   if (arg === '--envdir') {
     envPath = process.argv[index + 1];
-
-    removeInds.add(index);
-    removeInds.add(index + 1);
-  } else if (arg === '--processname') {
-    processName = process.argv[index + 1];
 
     removeInds.add(index);
     removeInds.add(index + 1);
@@ -23,7 +17,7 @@ process.argv.forEach((arg, index) => {
 process.argv = newArgs;
 
 const Env = require('../Env');
-Env.terraform(envPath, processName);
+Env.terraform(envPath);
 
 const path = require('path');
 const fs = require('fs');
@@ -186,6 +180,7 @@ function createMigrator(name) {
  * @param {int} [waitTime=0] Number of seconds to wait in event of the database not being ready
  */
 async function getConn(connUri, waitTime) {
+  console.log(`Trying ${connUri}`)
   const startTime = new Date();
 
   let c = null;
@@ -560,7 +555,6 @@ function processArgs() {
     console.log("");
     console.log("Global options:");
     console.log("");
-    console.log("  --processname                      Specifies the process name for pickup up the appropriate env configuration");
     console.log("  --envdir                           Specifies a directory where .env.json files can be found");
     console.log("");
     console.log("Valid commands:");
