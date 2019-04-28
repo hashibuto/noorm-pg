@@ -30,7 +30,7 @@ class Env {
         }
       }
 
-      if (process.env.NODE_ENV === 'production') {
+      if (process.env.APP_ENV === 'production') {
         const dotEnvProdFile = path.join(process.cwd(), '.env.prod');
         if (fs.existsSync(dotEnvProdFile)) {
           env = dotenv.parse(fs.readFileSync(dotEnvProdFile));
@@ -55,7 +55,7 @@ class Env {
         if (enviro === DOCKER && process.env.DOCKER_ENV === undefined)
           return;
 
-        if (enviro === PROD && process.env.NODE_ENV !== "production")
+        if (enviro === PROD && process.env.APP_ENV !== "production")
           return;
 
         const file = path.join(envPath, enviro);
