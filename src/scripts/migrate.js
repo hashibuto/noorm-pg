@@ -16,9 +16,6 @@ process.argv.forEach((arg, index) => {
 });
 process.argv = newArgs;
 
-const Env = require('../Env');
-Env.terraform(envPath);
-
 const path = require('path');
 const fs = require('fs');
 const Connection = require('../Connection');
