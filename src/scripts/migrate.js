@@ -63,7 +63,7 @@ function padLeadingZeros(number, length) {
 }
 /**
  * Verifies the environment and returns the section of the config.json
- * pertaining to the current process.env.NODE_ENV.  If any problem, nul
+ * pertaining to the current process.env.APP_ENV.  If any problem, nul
  * is returned.
  *
  */
@@ -74,15 +74,15 @@ function verifyEnvironment() {
     return null;
   }
 
-  let nodeEnv = process.env.NODE_ENV;
+  let nodeEnv = process.env.APP_ENV;
   if (nodeEnv === undefined) {
-    console.log("process.env.NODE_ENV is undefined, using development configuration");
+    console.log("process.env.APP_ENV is undefined, using development configuration");
     nodeEnv = "development";
   }
 
   const config = JSON.parse(fs.readFileSync(configFile));
   if (!(nodeEnv in config)) {
-    console.log(`There is no configuration for "${nodeEnv}" in config.json, feel free to add one or modify process.env.NODE_ENV`);
+    console.log(`There is no configuration for "${nodeEnv}" in config.json, feel free to add one or modify process.env.APP_ENV`);
     return null;
   }
 

@@ -75,7 +75,7 @@ It is recommended that you do not store your connection URIs in the config file 
 ```
 This will be evaluated as a variable by the `migdb` script instead of a string literal.
 
-It is important to note that `migdb` will look at `process.env.NODE_ENV` when determining which branch (production, development, etc.) to access when running migrations.  If `process.env.NODE_ENV` is not undefined, `migdb` will default to `development`.
+It is important to note that `migdb` will look at `process.env.APP_ENV` when determining which branch (production, development, etc.) to access when running migrations.  If `process.env.APP_ENV` is not undefined, `migdb` will default to `development`.
 #### Creating a migration script
 
 ```bash

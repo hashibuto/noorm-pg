@@ -54,7 +54,7 @@ class Config {
     return eval(match[2]);
   }
 }
-Config.MAIN_KEY = process.env.NODE_ENV === undefined ? 'development' : process.env.NODE_ENV;
+Config.MAIN_KEY = process.env.APP_ENV === undefined ? 'development' : process.env.APP_ENV;
 Config.__data = null;
 
 module.exports = Config;
