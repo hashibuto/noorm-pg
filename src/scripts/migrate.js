@@ -177,7 +177,8 @@ function createMigrator(name) {
  * @param {int} [waitTime=0] Number of seconds to wait in event of the database not being ready
  */
 async function getConn(connUri, waitTime) {
-  console.log(`Trying ${connUri}`)
+  const uriParts = connUri.split("@")
+  console.log(`Trying ${uriParts[1]}`)
   const startTime = new Date();
 
   let c = null;
