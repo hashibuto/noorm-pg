@@ -109,9 +109,14 @@ class Connection {
       let promise = null;
       if (bindings !== null) {
         const matches = queryString.match(BINDING_FINDER);
-        const data = matches.map(value => {
+        const data = [];
+        const seenAttrs = new Set();
+        matches.forEach(value => {
           const attrName = value.slice(1, value.length);
-          return bindings[attrName];
+          if (!seenAttrs.has(attrName)) {
+            data.push(bindings[attrName]);
+            seenAttrs.add(attrName);
+          }
         });
         let i = 0;
         const bindingOffset = {};
