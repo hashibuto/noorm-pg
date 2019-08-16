@@ -114,8 +114,12 @@ class Connection {
           return bindings[attrName];
         });
         let i = 0;
-        const bindQuery = queryString.replace(BINDING_FINDER, () => {
-          return `$${++i}`;
+        const bindingOffset = {};
+        const bindQuery = queryString.replace(BINDING_FINDER, (match, offset, string) => {
+          if (!(match in bindingOffset)) {
+            bindingOffset[match] = ++i;
+          }
+          return `$${bindingOffset[match]}`;
         });
 
         if (this.logging === true) {
