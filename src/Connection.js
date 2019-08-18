@@ -104,50 +104,70 @@ class Connection {
    *
    * @param {any} queryString SQL query string
    * @param {object} [bindings=null] Data binding object
+   * @param {boolean} arrayRow - If true, rows will be returned as arrays instead of javascript
+   *   objects.
+   *
    * @returns Promise
    * @memberof Connection
    */
-  async query(queryString, bindings=null) {
-    try {
-      let promise = null;
-      if (bindings !== null) {
-        const matches = queryString.match(BINDING_FINDER);
-        const data = [];
-        const seenAttrs = new Set();
-        matches.forEach(value => {
-          const attrName = value.slice(1, value.length);
-          if (!seenAttrs.has(attrName)) {
-            data.push(bindings[attrName]);
-            seenAttrs.add(attrName);
-          }
-        });
-        let i = 0;
-        const bindingOffset = {};
-        const bindQuery = queryString.replace(BINDING_FINDER, (match) => {
-          if (!(match in bindingOffset)) {
-            bindingOffset[match] = ++i;
-          }
-          return `$${bindingOffset[match]}`;
-        });
+  query(queryString, bindings=null, arrayRow=false) {
+    let queryObject;
 
-        if (this.logging === true) {
-          console.log(`Query:\n${bindQuery}\nBindings:\n${data}`);
+    if (bindings !== null) {
+      const matches = queryString.match(BINDING_FINDER);
+      const data = [];
+      const seenAttrs = new Set();
+      matches.forEach(value => {
+        const attrName = value.slice(1, value.length);
+        if (!seenAttrs.has(attrName)) {
+          data.push(bindings[attrName]);
+          seenAttrs.add(attrName);
         }
+      });
+      let i = 0;
+      const bindingOffset = {};
+      const bindQuery = queryString.replace(BINDING_FINDER, (match) => {
+        if (!(match in bindingOffset)) {
+          bindingOffset[match] = ++i;
+        }
+        return `$${bindingOffset[match]}`;
+      });
 
-        promise = this.__conn.query(bindQuery, data);
-      } else {
-        if (this.logging === true) {
-          console.log(`Query:\n${queryString}`);
+      queryObject = {
+        text: bindQuery,
+        values: data,
+      };
+    } else {
+      if (this.logging === true) {
+        console.log(`Query:\n${queryString}`);
+      }
+      queryObject = {
+        text: queryString,
+      };
+
+      if (arrayRow === true) {
+        queryObject.rowMode = 'array';
+      }
+    }
+
+    return this.__conn.query(queryObject)
+    .then(result => {
+      if (this.logging === true) {
+        console.log(`Query:\n${queryObject.text}`);
+        if (queryObject.values !== undefined) {
+          console.log(`Bindings:\n${queryObject.values}`);
         }
-        promise = this.__conn.query(queryString);
       }
 
-      return promise;
-    } catch(e) {
-      console.log(`Query:\n${queryString}`);
-      console.log(`Bindings:\n${bindings}`);
+      return result;
+    })
+    .catch(e => {
+      console.log(`Query:\n${queryObject.text}`);
+      if (queryObject.values !== undefined) {
+        console.log(`Bindings:\n${queryObject.values}`);
+      }
       throw e;
-    }
+    });
   }
 
   /*
@@ -157,19 +177,31 @@ class Connection {
    * @param {String} queryString SQL query string
    * @param {Array} Array of binding values, each will be assigned in order to
    *   markers in the queryString represented by $1, $2 etc. tokens
+   * @param {boolean} arrayRow - If true, rows will be returned as arrays instead of javascript
+   *   objects.
    */
-  async rawQuery(queryString, bindings) {
-    try {
+  rawQuery(queryString, bindings, arrayRow=false) {
+    const queryObject = {
+      text: queryString,
+      values: bindings
+    };
+
+    if (arrayRow === true) {
+      queryObject.rowMode = 'array';
+    }
+
+    return this.__conn.query(queryObject)
+    .then(result => {
       if (this.logging === true) {
         console.log(`Query:\n${queryString}\nBindings:\n${bindings}`);
       }
-
-      return await this.__conn.query(queryString, bindings).catch(e => { throw e });
-    } catch(e) {
+      return result;
+    })
+    .catch(e => {
       console.log(`Query:\n${queryString}`);
       console.log(`Bindings:\n${bindings}`);
       throw e;
-    }
+    });
   }
 
   /*
@@ -191,8 +223,13 @@ class Connection {
    *   ['a', 'b', new SubQuery('SELECT value FROM other_table WHERE id = $1', ['c'])],
    *   ['d', 'e', new SubQuery('SELECT value FROM other_table WHERE id = $1', ['f'])],
    * ]
+   *
+   * @param {String} queryString SQL query string
+   * @param {Array} Array of binding arrays.
+   * @param {boolean} arrayRow - If true, rows will be returned as arrays instead of javascript
+   *   objects.
    */
-  async bulkQuery(queryString, bindings) {
+  bulkQuery(queryString, bindings, arrayRow=false) {
     let bindingArray = [];
     const values = [];
     bindings.forEach(bindingRow => {
@@ -218,7 +255,23 @@ class Connection {
       return `VALUES\n${values.join(',\n')}`;
     });
 
-    return await this.__conn.query(bindQuery, bindingArray).catch(e => {
+    const queryObject = {
+      text: bindQuery,
+      values: bindingArray
+    };
+
+    if (arrayRow === true) {
+      queryObject.rowMode = 'array';
+    }
+
+    return this.__conn.query(queryObject)
+    .then(result => {
+      if (this.logging === true) {
+        console.log(`Query:\n${queryString}\nBindings:\n${bindings}`);
+      }
+      return result;
+    })
+    .catch(e => {
       console.log(`Query:\n${bindQuery}`);
       console.log(`Bindings:\n${bindingArray}`);
       throw e;
