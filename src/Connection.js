@@ -1,5 +1,7 @@
 const { Pool } = require('pg');
 const types = require('pg').types
+const SubQuery = require('./SubQuery');
+const assert = require('assert');
 
 types.setTypeParser(20, function(val) {
   return parseInt(val)
@@ -8,6 +10,7 @@ types.setTypeParser(20, function(val) {
 // Regular expression which matches on binding parameter markers
 // Had to remove in-quote detection because it was crashing the js engine
 const BINDING_FINDER = /((?<!:):[a-zA-Z0-9_]+)/g;
+const BULK_BINDING_FINDER = /((?<!:):VALUES)/g;
 
 /**
  * Wraps the node-postgres to allow a few things such as transaction blocks and
@@ -120,7 +123,7 @@ class Connection {
         });
         let i = 0;
         const bindingOffset = {};
-        const bindQuery = queryString.replace(BINDING_FINDER, (match, offset, string) => {
+        const bindQuery = queryString.replace(BINDING_FINDER, (match) => {
           if (!(match in bindingOffset)) {
             bindingOffset[match] = ++i;
           }
@@ -161,12 +164,65 @@ class Connection {
         console.log(`Query:\n${queryString}\nBindings:\n${bindings}`);
       }
 
-      return this.__conn.query(queryString, bindings);
+      return await this.__conn.query(queryString, bindings).catch(e => { throw e });
     } catch(e) {
       console.log(`Query:\n${queryString}`);
       console.log(`Bindings:\n${bindings}`);
       throw e;
     }
+  }
+
+  /*
+   * Used to perform a bulk insert or update operation.  Accepts bindings as an array of arrays,
+   * whereby the inner array corresponds to a group of VALUES.
+   *
+   * Example query string:
+   *
+   *  INSERT INTO table
+   *  (col1, col2, col3)
+   *  :VALUES
+   *  ON CONFLICT x DO NOTHING;
+   *
+   * Supplied bindings will replace :VALUES.  Should a portion of the VALUES be dependent
+   * on a subquery as opposed to a simple binding, the SubQuery object should be supplied
+   * in lieu of a piece of binding data.  For example:
+   *
+   * const bindings = [
+   *   ['a', 'b', new SubQuery('SELECT value FROM other_table WHERE id = $1', ['c'])],
+   *   ['d', 'e', new SubQuery('SELECT value FROM other_table WHERE id = $1', ['f'])],
+   * ]
+   */
+  async bulkQuery(queryString, bindings) {
+    let bindingArray = [];
+    const values = [];
+    bindings.forEach(bindingRow => {
+      const rowValues = [];
+      bindingRow.forEach(bindingCol => {
+        if (bindingCol instanceof SubQuery) {
+          // Process the subquery
+          const [ subQueryString, bindings ] = bindingCol.process(bindingArray.length);
+          bindingArray = [...bindingArray, ...bindings];
+          rowValues.push(`(${subQueryString})`);
+        } else {
+          bindingArray.push(bindingCol);
+          rowValues.push(`$${bindingArray.length}`);
+        }
+      })
+      values.push(`(${rowValues.join(',')})`)
+    })
+
+    const matches = queryString.match(BULK_BINDING_FINDER);
+    assert(matches !== null, "Missing :VALUES token");
+    assert(matches.length === 1, "Query must contain exactly one :VALUES token");
+    const bindQuery = queryString.replace(BULK_BINDING_FINDER, (match) => {
+      return `VALUES\n${values.join(',\n')}`;
+    });
+
+    return await this.__conn.query(bindQuery, bindingArray).catch(e => {
+      console.log(`Query:\n${bindQuery}`);
+      console.log(`Bindings:\n${bindingArray}`);
+      throw e;
+    });
   }
 };
 
