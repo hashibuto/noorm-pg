@@ -36,7 +36,8 @@ class SubQuery {
    */
   static isinstance(obj) {
     if (
-      (typeof(obj) === 'object') &&
+      (obj !== undefined) &&
+      (obj !== null) &&
       (obj.instanceof !== undefined) &&
       (typeof(obj.instanceof) === 'function')
     ) {
