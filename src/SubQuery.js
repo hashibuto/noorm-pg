@@ -17,6 +17,31 @@ class SubQuery {
     this.bindings = bindings;
   }
 
+  /**
+   * Returns a string indicating the namespaced instance type of this object.  This mitigates an
+   * issue involving use of instanceof where multiple copies of noorm-pg exist.
+   *
+   * @returns
+   * @memberof SubQuery
+   */
+  instanceof() {
+    return SubQuery.INSTANCE_NAME;
+  }
+
+  /**
+   * Returns true if obj is an instance of SubQuery.
+   *
+   * @param {*} obj
+   * @memberof SubQuery
+   */
+  static isinstance(obj) {
+    if (obj.instanceof !== undefined && typeof(obj.instanceof === 'function')) {
+      return (obj.instanceof() === SubQuery.INSTANCE_NAME);
+    }
+
+    return false;
+  }
+
   /*
    * Processes a sub query and returns a 2 piece array containing:
    * - The updated query string with binding tokens reflecting the greater location
@@ -46,5 +71,7 @@ class SubQuery {
     ]
   }
 }
+
+SubQuery.INSTANCE_NAME = 'noorm-pg.SubQuery';
 
 module.exports = SubQuery;

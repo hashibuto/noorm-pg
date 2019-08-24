@@ -235,7 +235,7 @@ class Connection {
     bindings.forEach(bindingRow => {
       const rowValues = [];
       bindingRow.forEach(bindingCol => {
-        if (bindingCol instanceof SubQuery) {
+        if (SubQuery.isinstance(bindingCol)) {
           // Process the subquery
           const [ subQueryString, bindings ] = bindingCol.process(bindingArray.length);
           bindingArray = [...bindingArray, ...bindings];
