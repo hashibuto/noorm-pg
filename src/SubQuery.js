@@ -35,7 +35,11 @@ class SubQuery {
    * @memberof SubQuery
    */
   static isinstance(obj) {
-    if (obj.instanceof !== undefined && typeof(obj.instanceof === 'function')) {
+    if (
+      (typeof(obj) === 'object') &&
+      (obj.instanceof !== undefined) &&
+      (typeof(obj.instanceof) === 'function')
+    ) {
       return (obj.instanceof() === SubQuery.INSTANCE_NAME);
     }
 
