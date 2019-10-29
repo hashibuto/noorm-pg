@@ -230,6 +230,8 @@ class Connection {
    *   objects.
    */
   bulkQuery(queryString, bindings, arrayRow=false) {
+    assert(Array.isArray(bindings), "Bindings must be an array type");
+    assert(bindings.length > 0, "No bindings supplied to query");
     let bindingArray = [];
     const values = [];
     bindings.forEach(bindingRow => {
