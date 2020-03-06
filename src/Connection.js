@@ -226,58 +226,82 @@ class Connection {
    *
    * @param {String} queryString SQL query string
    * @param {Array} Array of binding arrays.
-   * @param {boolean} arrayRow - If true, rows will be returned as arrays instead of javascript
-   *   objects.
+   * @param {boolean} arrayRow - If true, rows will be returned as arrays instead of javascript objects.
+   * @param {number} rowChunkSize - The maximum number of rows to include per statement.  This will cause
+   *   the query to be broken up into multiple queries if the row count exceeds this number.  Data being
+   *   returned in any of the queries will be concatenated into a single array and returned.
+   *
    */
-  bulkQuery(queryString, bindings, arrayRow=false) {
+  async bulkQuery(queryString, bindings, rowChunkSize=10000, arrayRow=false) {
     assert(Array.isArray(bindings), "Bindings must be an array type");
     assert(bindings.length > 0, "No bindings supplied to query");
-    let bindingArray = [];
-    const values = [];
-    bindings.forEach(bindingRow => {
-      const rowValues = [];
-      bindingRow.forEach(bindingCol => {
-        if (SubQuery.isinstance(bindingCol)) {
-          // Process the subquery
-          const [ subQueryString, bindings ] = bindingCol.process(bindingArray.length);
-          bindingArray = [...bindingArray, ...bindings];
-          rowValues.push(`(${subQueryString})`);
-        } else {
-          bindingArray.push(bindingCol);
-          rowValues.push(`$${bindingArray.length}`);
+
+    let firstResult = null;
+    let resultRows = [];
+    let result;
+    for (let i = 0; i < bindings.length; i += 1000) {
+      const subBindings = bindings.slice(i, i+1000);
+      if (subBindings.length > 0) {
+        let bindingArray = [];
+        const values = [];
+        subBindings.forEach(bindingRow => {
+          const rowValues = [];
+          bindingRow.forEach(bindingCol => {
+            if (SubQuery.isinstance(bindingCol)) {
+              // Process the subquery
+              const [ subQueryString, bindings ] = bindingCol.process(bindingArray.length);
+              bindingArray = [...bindingArray, ...bindings];
+              rowValues.push(`(${subQueryString})`);
+            } else {
+              bindingArray.push(bindingCol);
+              rowValues.push(`$${bindingArray.length}`);
+            }
+          })
+          values.push(`(${rowValues.join(',')})`)
+        })
+
+        const matches = queryString.match(BULK_BINDING_FINDER);
+        assert(matches !== null, "Missing :VALUES token");
+        assert(matches.length === 1, "Query must contain exactly one :VALUES token");
+        const bindQuery = queryString.replace(BULK_BINDING_FINDER, (match) => {
+          return `VALUES\n${values.join(',\n')}`;
+        });
+
+        const queryObject = {
+          text: bindQuery,
+          values: bindingArray
+        };
+
+        if (arrayRow === true) {
+          queryObject.rowMode = 'array';
         }
-      })
-      values.push(`(${rowValues.join(',')})`)
-    })
 
-    const matches = queryString.match(BULK_BINDING_FINDER);
-    assert(matches !== null, "Missing :VALUES token");
-    assert(matches.length === 1, "Query must contain exactly one :VALUES token");
-    const bindQuery = queryString.replace(BULK_BINDING_FINDER, (match) => {
-      return `VALUES\n${values.join(',\n')}`;
-    });
+        result = await this.__conn.query(queryObject)
+        .then(result => {
+          if (this.logging === true) {
+            console.log(`Query:\n${queryString}\nBindings:\n${bindings}`);
+          }
+          return result;
+        })
+        .catch(e => {
+          console.log(`Query:\n${bindQuery}`);
+          console.log(`Bindings:\n${bindingArray}`);
+          throw e;
+        });
 
-    const queryObject = {
-      text: bindQuery,
-      values: bindingArray
-    };
+        if (firstResult === null) {
+          firstResult = result;
+        }
 
-    if (arrayRow === true) {
-      queryObject.rowMode = 'array';
+        resultRows = [
+          ...resultRows,
+          result.rows,
+        ]
+      }
     }
 
-    return this.__conn.query(queryObject)
-    .then(result => {
-      if (this.logging === true) {
-        console.log(`Query:\n${queryString}\nBindings:\n${bindings}`);
-      }
-      return result;
-    })
-    .catch(e => {
-      console.log(`Query:\n${bindQuery}`);
-      console.log(`Bindings:\n${bindingArray}`);
-      throw e;
-    });
+    firstResult.rows = resultRows;
+    return firstResult;
   }
 };
 

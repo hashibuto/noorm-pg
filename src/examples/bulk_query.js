@@ -5,6 +5,10 @@ class Example {
   async run() {
     // postgresql://{host}:{port}/{database}
     const connString = process.env.CONN_STRING;
+    if (connString === undefined) {
+      console.log('Please set the environment variable "CONN_STRING" with your postgres connection string')
+      process.exit(1);
+    }
 
     const conn = new Connection(connString, true);
     try {
