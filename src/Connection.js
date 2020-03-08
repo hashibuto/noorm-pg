@@ -295,7 +295,7 @@ class Connection {
 
         resultRows = [
           ...resultRows,
-          result.rows,
+          ...result.rows,
         ]
       }
     }
